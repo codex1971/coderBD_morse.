@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODEX BD - Morse Converter [Hacker Edition]</title>
+    <style>
+        /* --- CSS STYLES --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: black;
+            font-family: 'Courier New', Courier, monospace; /* Monospace for hacker feel */
+            color: #0f0; /* Green text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Matrix Canvas Background */
+        canvas#matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        /* Main Container - The UI Frame */
+        .cyber-frame {
+            position: relative;
+            background-color: rgba(0, 10, 0, 0.85); /* Semi-transparent black-green */
+            width: 90%;
+            max-width: 900px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            border: 2px solid #00ffcc; /* Cyan border like image */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Top Header Area */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #00ffcc;
+            padding-bottom: 10px;
+            width: 100%;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            color: #00ffcc;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #00ffcc;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+            color: #0f0;
+            opacity: 0.8;
+        }
+
+        /* Convert Area (Two inputs + buttons) */
+        .converter-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        /* Single Input/Output Box */
+        .box {
+            flex: 1;
+            background: rgba(0, 20, 0, 0.9);
+            border: 1px solid;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .human-box {
+            border-color: #ff9900; /* Amber for Human input like image */
+        }
+
+        .morse-box {
+            border-color: #00ffcc; /* Cyan for Morse output like image */
+        }
+
+        .box label {
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .human-box label { color: #ff9900; }
+        .morse-box label { color: #00ffcc; }
+
+        textarea {
+            background: transparent;
+            border: none;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            resize: none;
+            height: 150px;
+            outline: none;
+            padding: 5px;
+        }
+
+        /* Buttons Area */
+        .buttons-area {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 50px; /* Adjust placement between boxes */
+        }
+
+        button {
+            background: transparent;
+            border: 2px solid;
+            padding: 10px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+
+        button.to-morse {
+            color: #ff9900;
+            border-color: #ff9900;
+        }
+
+        button.to-morse:hover {
+            background-color: rgba(255, 153, 0, 0.2);
+            box-shadow: 0 0 10px #ff9900;
+        }
+
+        button.to-text {
+            color: #00ffcc;
+            border-color: #00ffcc;
+        }
+
+        button.to-text:hover {
+            background-color: rgba(0, 255, 204, 0.2);
+            box-shadow: 0 0 10px #00ffcc;
+        }
+
+        /* Footer Area */
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            text-align: right;
+            width: 100%;
+            border-top: 1px solid rgba(0, 255, 0, 0.2);
+            padding-top: 10px;
+            opacity: 0.7;
+        }
+
+        .footer .highlight {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Responsive Fix for Mobile */
+        @media (max-width: 600px) {
+            .converter-container {
+                flex-direction: column;
+            }
+            .buttons-area {
+                flex-direction: row;
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix"></canvas>
+
+    <div class="cyber-frame">
+        <div class="header">
+            <h1>CODEX BD: MORSE CODE CONVERTER</h1>
+            <p>TEXT TO MORSE CODE &#8646; MORSE CODE TO TEXT</p>
+        </div>
+
+        <div class="converter-container">
+            <div class="box human-box">
+                <label>Input: Human Text</label>
+                <textarea id="humanInput" placeholder="Type or paste text..."></textarea>
+            </div>
+
+            <div class="buttons-area">
+                <button class="to-morse" id="btnToMorse">>> Convert to Morse</button>
+                <button class="to-text" id="btnToText">>> Decode to Text</button>
+            </div>
+
+            <div class="box morse-box">
+                <label>Output: Morse Signal</label>
+                <textarea id="morseInput" placeholder="Type or paste Morse (use space between chars)..."></textarea>
+            </div>
+        </div>
+
+        <div class="footer">
+            POWERED BY CODEX BD | DEVELOPED BY <span class="highlight">KHOKON TALUKDER</span>
+        </div>
+    </div>
+
+    <script>
+        /* --- JAVASCRIPT & LOGIC --- */
+
+        // 1. Matrix Rain Animation
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const rainDrops = [];
+
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        const drawMatrix = () => {
+            // Semi-transparent black background creates fade effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0f0'; // Green text
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        };
+
+        // Run matrix animation at 30fps
+        setInterval(drawMatrix, 33);
+
+        // Adjust canvas on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // 2. Morse Code Conversion Logic
+        const morseCodeMap = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+            'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+            'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+            'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+            'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+            '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+            '9': '----.', '0': '-----', ' ': '/' // Slash for word separator
+        };
+
+        // Create reverse map for decoding (Morse to Text)
+        const reverseMorseMap = {};
+        for (const key in morseCodeMap) {
+            reverseMorseMap[morseCodeMap[key]] = key;
+        }
+
+        // DOM Elements
+        const humanInput = document.getElementById('humanInput');
+        const morseInput = document.getElementById('morseInput');
+        const btnToMorse = document.getElementById('btnToMorse');
+        const btnToText = document.getElementById('btnToText');
+
+        // Functions
+        function convertToMorse() {
+            const input = humanInput.value.toUpperCase();
+            let result = '';
+            for (let i = 0; i < input.length; i++) {
+                const char = input[i];
+                if (morseCodeMap[char]) {
+                    result += morseCodeMap[char] + ' '; // Space between morse chars
+                } else if (char === ' ') {
+                    result += '/ '; // Space between morse words
+                }
+            }
+            morseInput.value = result.trim();
+        }
+
+        function convertToText() {
+            const input = morseInput.value.trim();
+            const morseChars = input.split(' ');
+            let result = '';
+            for (let i = 0; i < morseChars.length; i++) {
+                const morseChar = morseChars[i];
+                if (reverseMorseMap[morseChar]) {
+                    result += reverseMorseMap[morseChar];
+                } else if (morseChar === '/') {
+                    result += ' ';
+                }
+            }
+            humanInput.value = result;
+        }
+
+        // Event Listeners for buttons
+        btnToMorse.addEventListener('click', convertToMorse);
+        btnToText.addEventListener('click', convertToText);
+
+        // Optional: Also convert on typing for real-time effect
+        humanInput.addEventListener('input', convertToMorse);
+        // We only convert Human to Morse automatically because Morse to Text is complex to type real-time.
+    </script>
+</body>
+</html>
